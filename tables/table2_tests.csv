@@ -1,0 +1,9 @@
+test_name,lag,statistic,p_value,interpretation
+ADF,14,-18.095899711743662,2.562018776544184e-30,stationary
+Ljung-Box(ret),10,43.34359225690056,4.316585341990987e-06,autocorrelation present
+Ljung-Box(ret),20,68.90219486992748,2.749069418696499e-07,autocorrelation present
+Ljung-Box(ret^2),10,1525.7803821377597,0.0,volatility clustering
+Ljung-Box(ret^2),20,2379.2831374933808,0.0,volatility clustering
+ARCH-LM,5,529.6317836963616,3.2000514799284045e-112,ARCH effect
+ARCH-LM,10,634.5193434108421,7.027749637091316e-130,ARCH effect
+ARCH-LM,12,636.8342919363812,1.431671151167635e-128,ARCH effect

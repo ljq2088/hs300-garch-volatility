@@ -1,0 +1,8 @@
+test,statistic,p_value,interpretation
+Ljung-Box(z_t) lag=10,40.66388167387393,1.2939608779504678e-05,still autocorrelated
+Ljung-Box(z_t) lag=20,48.70842002898429,0.0003380971309997249,still autocorrelated
+Ljung-Box(z_t^2) lag=10,4.481650250280596,0.9230148631196915,GARCH captured most heteroskedasticity
+Ljung-Box(z_t^2) lag=20,9.768091191256099,0.9721847477058572,GARCH captured most heteroskedasticity
+ARCH-LM(z_t) lag=5,2.3426067849793206,0.7999892883069627,heteroskedasticity well captured
+ARCH-LM(z_t) lag=10,4.433059991636465,0.9257038749568021,heteroskedasticity well captured
+ARCH-LM(z_t) lag=12,5.401774107128254,0.9431970227233253,heteroskedasticity well captured

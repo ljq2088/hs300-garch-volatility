@@ -1,0 +1,10 @@
+parameter,value,description
+mu,0.024651336540833207,Mean equation constant
+omega,0.021579923172773473,Baseline variance
+alpha,0.07335593610929522,News impact (ARCH effect)
+beta,0.9194713929325842,Volatility persistence (GARCH effect)
+alpha + beta,0.9928273290418794,Volatility persistence index
+half-life (days),96.2902583783877,Shock half-life
+Log-likelihood,-10152.990499400234,Maximized log-likelihood
+AIC,20313.980998800467,Akaike information criterion
+BIC,20340.71318502248,Bayesian information criterion
