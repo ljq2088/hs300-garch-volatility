@@ -89,7 +89,18 @@ paper/
 | AR(1)-GARCH | AIC=20308.85，略优于常数均值GARCH |
 | 残差诊断 | z_t² Ljung-Box和ARCH-LM均不显著，GARCH成功捕捉条件异方差 |
 
-**注意**：GJR-GARCH的γ为正但统计不显著（p>0.10），论文中对应写为"positive but not statistically significant"，不使用"杠杆效应存在"等过度表述。
+**注意**：GJR-GARCH的γ为正但统计不显著（p=0.217），论文中对应写为"positive but not statistically significant"，不使用"杠杆效应存在"等过度表述。
+
+## 当前状态
+
+代码、表格、图形、论文草稿和AI使用声明均已生成；最终提交前需人工检查PDF排版和图表编号。
+
+## PDF 生成
+
+`paper/assignment_draft.md` 是最终可编辑源文件，可通过以下方式转为PDF：
+- [pandoc](https://pandoc.org)：`pandoc assignment_draft.md -o assignment_final.pdf --pdf-engine=xelatex -V CJKmainfont="SimSun"`
+- [Typora](https://typora.io)：直接导出PDF
+- VS Code + Markdown PDF 插件
 
 ## 注意事项
 
