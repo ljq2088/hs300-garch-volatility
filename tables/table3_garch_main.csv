@@ -1,10 +1,10 @@
-parameter,value,description
-mu,0.024651336540833207,Mean equation constant
-omega,0.021579923172773473,Baseline variance
-alpha,0.07335593610929522,News impact (ARCH effect)
-beta,0.9194713929325842,Volatility persistence (GARCH effect)
-alpha + beta,0.9928273290418794,Volatility persistence index
-half-life (days),96.2902583783877,Shock half-life
-Log-likelihood,-10152.990499400234,Maximized log-likelihood
-AIC,20313.980998800467,Akaike information criterion
-BIC,20340.71318502248,Bayesian information criterion
+parameter,estimate,std_error,t_stat,p_value,description
+mu,0.024651336540833207,0.015943951428566666,1.5461246637182788,0.12207446333693306,Mean equation constant
+omega,0.021579923172773473,0.006576322180728346,3.281457717508517,0.001032720068297036,Baseline variance
+alpha,0.07335593610929522,0.010313606524152455,7.112539724829517,1.1392672887760508e-12,News impact (ARCH effect)
+beta,0.9194713929325842,0.010420233557329869,88.23903877718783,0.0,Volatility persistence (GARCH effect)
+alpha+beta,0.9928273290418794,,,,Volatility persistence index
+half-life (days),96.2902583783877,,,,Shock half-life
+Log-likelihood,-10152.990499400234,,,,Maximized log-likelihood
+AIC,20313.980998800467,,,,Akaike information criterion
+BIC,20340.71318502248,,,,Bayesian information criterion

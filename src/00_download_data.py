@@ -10,6 +10,10 @@ import pandas as pd
 DATA_RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
 DATA_PROCESSED = Path(__file__).resolve().parent.parent / "data" / "processed"
 
+# 统一样本区间 — 与 README 和论文保持一致
+START_DATE = "20020101"
+END_DATE = "20260511"
+
 
 def download_hs300_daily():
     """尝试通过 akshare 下载沪深300日度数据，失败时给出明确报错。"""
@@ -20,13 +24,16 @@ def download_hs300_daily():
         print("[ERROR] akshare 未安装。请运行: pip install akshare")
         sys.exit(1)
 
-    # 尝试接口1: index_zh_a_hist (东方财富)
+    start_dt = pd.to_datetime(START_DATE)
+    end_dt = pd.to_datetime(END_DATE)
+
+    # 尝试接口1: index_zh_a_hist (东方财富) — 传入统一区间
     df = None
     for attempt, func_desc in enumerate(
         [
             ("index_zh_a_hist", lambda: ak.index_zh_a_hist(
                 symbol="000300", period="daily",
-                start_date="20150101", end_date="20251231"
+                start_date=START_DATE, end_date=END_DATE
             )),
             ("stock_zh_index_daily(sh000300)", lambda: ak.stock_zh_index_daily(
                 symbol="sh000300"
@@ -76,7 +83,10 @@ def download_hs300_daily():
     df["close"] = pd.to_numeric(df["close"], errors="coerce")
     df = df.sort_values("date").reset_index(drop=True)
 
-    # 只保留需要的列（如果有的话）
+    # 统一裁剪到指定区间（对 fallback 接口尤为重要）
+    df = df[(df["date"] >= start_dt) & (df["date"] <= end_dt)].copy()
+
+    # 只保留需要的列
     keep_cols = [c for c in required_cols + ["open", "high", "low", "volume", "amount"]
                  if c in df.columns]
     df = df[keep_cols]
@@ -92,7 +102,8 @@ def download_hs300_daily():
 
     print(f"[INFO] 原始数据已保存: {raw_path}")
     print(f"[INFO] 清理数据已保存: {clean_path}")
-    print(f"[INFO] 数据范围: {df['date'].min().date()} ~ {df['date'].max().date()}")
+    print(f"[INFO] 实际起始日期: {df['date'].min().date()}")
+    print(f"[INFO] 实际结束日期: {df['date'].max().date()}")
     print(f"[INFO] 样本量: {len(df)}")
     print(f"[INFO] 缺失值: close={df['close'].isna().sum()}, total={df.isna().sum().sum()}")
 

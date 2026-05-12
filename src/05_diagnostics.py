@@ -1,7 +1,7 @@
 """
 05_diagnostics.py
 GARCH(1,1)主模型残差诊断。
-诊断对象：标准化残差 z_t = ε_t / σ_t
+使用 arch 包的 fit.std_resid（已保存为CSV），不手动计算 ret/sigma。
 """
 from pathlib import Path
 import numpy as np
@@ -24,20 +24,23 @@ plt.rcParams["axes.unicode_minus"] = False
 
 
 def load_data():
+    """读取收益率和预保存的标准化残差（来自 arch fit.std_resid）。"""
     df = pd.read_csv(DATA_PROCESSED / "hs300_returns.csv", parse_dates=["date"])
-    vol = pd.read_csv(DATA_PROCESSED / "hs300_garch_conditional_volatility.csv",
-                      parse_dates=["date"])
-    return df, vol
+    std_resid_path = DATA_PROCESSED / "hs300_garch_standardized_residuals.csv"
+    if not std_resid_path.exists():
+        raise FileNotFoundError(
+            f"找不到 {std_resid_path}，请先运行 04_garch_models.py"
+        )
+    z_df = pd.read_csv(std_resid_path, parse_dates=["date"])
+    return df, z_df
 
 
 def main():
-    df, vol = load_data()
+    df, z_df = load_data()
     dates = df["date"].values
-    ret = df["ret"].values
-    sigma = vol["conditional_volatility"].values
 
-    # 标准化残差
-    z = ret / sigma
+    # 标准化残差 z_t = ε_t / σ_t，来自 arch fit.std_resid
+    z = z_df["std_resid"].values
     z2 = z ** 2
 
     FIGURES.mkdir(parents=True, exist_ok=True)
@@ -46,9 +49,9 @@ def main():
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(dates, z, linewidth=0.3, color="black")
     ax.axhline(y=0, color="gray", linestyle="--", linewidth=0.5)
-    ax.set_title("Standardized Residuals $z_t$ — GARCH(1,1)")
+    ax.set_title("Standardized Residuals z_t — GARCH(1,1)")
     ax.set_xlabel("Date")
-    ax.set_ylabel("$z_t$")
+    ax.set_ylabel("z_t")
     fig.tight_layout()
     fig.savefig(FIGURES / "fig6_standardized_residuals.png", dpi=150)
     plt.close(fig)
@@ -56,21 +59,21 @@ def main():
     # fig7: 平方标准化残差
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(dates, z2, linewidth=0.3, color="black")
-    ax.set_title("Squared Standardized Residuals $z_t^2$ — GARCH(1,1)")
+    ax.set_title("Squared Standardized Residuals z_t^2 — GARCH(1,1)")
     ax.set_xlabel("Date")
-    ax.set_ylabel("$z_t^2$")
+    ax.set_ylabel("z_t^2")
     fig.tight_layout()
     fig.savefig(FIGURES / "fig7_squared_standardized_residuals.png", dpi=150)
     plt.close(fig)
 
     # fig8: ACF of z
-    fig = plot_acf(z, lags=30, title="ACF of Standardized Residuals $z_t$")
+    fig = plot_acf(z, lags=30, title="ACF of Standardized Residuals z_t")
     fig.tight_layout()
     fig.savefig(FIGURES / "fig8_acf_standardized_residuals.png", dpi=150)
     plt.close(fig)
 
     # fig9: ACF of z^2
-    fig = plot_acf(z2, lags=30, title="ACF of Squared Standardized Residuals $z_t^2$")
+    fig = plot_acf(z2, lags=30, title="ACF of Squared Standardized Residuals z_t^2")
     fig.tight_layout()
     fig.savefig(FIGURES / "fig9_acf_squared_standardized_residuals.png", dpi=150)
     plt.close(fig)

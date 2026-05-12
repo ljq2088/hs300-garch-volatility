@@ -12,6 +12,7 @@ REQUIRED = {
         "data/processed/hs300_daily_clean.csv",
         "data/processed/hs300_returns.csv",
         "data/processed/hs300_garch_conditional_volatility.csv",
+        "data/processed/hs300_garch_standardized_residuals.csv",
     ],
     "figures": [
         "figures/fig1_hs300_close.png",
@@ -38,6 +39,7 @@ REQUIRED = {
     ],
     "paper": [
         "paper/assignment_draft.md",
+        "paper/ai_usage_statement.md",
     ],
 }
 
