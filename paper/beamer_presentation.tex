@@ -258,25 +258,63 @@
 \end{frame}
 
 % === Slide 15: 稳健性 — GJR-GARCH ===
-\begin{frame}{稳健性2: GJR-GARCH(1,1)}
+\begin{frame}{稳健性2: GJR-GARCH(1,1) — Normal vs Student-t}
   \begin{block}{GJR-GARCH方差方程}
     \[
     \sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \gamma\,I(\varepsilon_{t-1}<0)\,\varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
     \]
   \end{block}
+  \begin{table}
+    \centering
+    \begin{tabular}{lccc}
+      \toprule
+      & GJR-Normal & GJR-Student-t \\
+      \midrule
+      $\gamma$ & 0.0159 & 0.0217 \\
+      p($\gamma$) & 0.217 & \textbf{0.046} \\
+      AIC & 20312 & \textbf{19899} \\
+      $\nu$ & -- & 5.14 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
   \begin{itemize}
-    \item $\hat{\gamma}=0.0159$，$p=0.217$ \quad $\Rightarrow$ \textbf{为正但不显著}
-    \item 不能强断言存在杠杆效应
-    \item AIC仅略优于对称GARCH（20312 vs 20314），BIC更高
+    \item 正态假设下$\gamma$不显著；\textbf{厚尾Student-t下$\gamma$达5\%显著}
+    \item 分布误设可能掩盖非对称效应；厚尾分布对识别非对称至关重要
   \end{itemize}
-  \begin{block}{解释}
-    在本样本区间，沪深300指数层面的非对称波动效应\textbf{强度有限}，\\
-    或可能被正向波动事件所稀释。
+\end{frame}
+
+% === Slide 16: 稳健性 — EGARCH ===
+\begin{frame}{稳健性3: EGARCH(1,1)}
+  \begin{block}{EGARCH方差方程（对数形式）}
+    \[
+    \ln\sigma_t^2 = \omega + \alpha(|z_{t-1}|-\mathbb{E}|z_{t-1}|) + \gamma z_{t-1} + \beta\ln\sigma_{t-1}^2
+    \]
+  \end{block}
+  \begin{itemize}
+    \item $\alpha$：冲击幅度效应；$\gamma$：符号/非对称效应；$\beta$：对数方差持续性
+    \item $\gamma<0$表示负向冲击提高未来对数条件方差（杠杆效应方向）
+  \end{itemize}
+  \begin{table}
+    \centering
+    \begin{tabular}{lcc}
+      \toprule
+      & EGARCH-Normal & EGARCH-Student-t \\
+      \midrule
+      $\gamma$ & $-0.0121$ & $-0.0123$ \\
+      p($\gamma$) & 0.213 & 0.101 \\
+      AIC & 20299 & \textbf{19876} \\
+      $\nu$ & -- & 5.19 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{block}{结论}
+    EGARCH非对称项均未达5\%显著；Student-t下p=0.101，\\
+    接近10\%边界但未达常用显著性水平——\textbf{非对称证据对模型形式敏感}。
   \end{block}
 \end{frame}
 
-% === Slide 16: 稳健性 — AR(1)-GARCH ===
-\begin{frame}{稳健性3: AR(1)-GARCH(1,1)}
+% === Slide 17: 稳健性 — AR(1)-GARCH ===
+\begin{frame}{稳健性4: AR(1)-GARCH(1,1)}
   \begin{block}{均值方程}
     \[ r_t = \phi_0 + \phi_1 r_{t-1} + \varepsilon_t \]
   \end{block}
@@ -292,7 +330,7 @@
   \end{block}
 \end{frame}
 
-% === Slide 17: 核心发现 ===
+% === Slide 18: 核心发现 ===
 \begin{frame}{核心发现}
   \begin{enumerate}
     \item \textbf{波动聚集存在}\\
@@ -306,12 +344,16 @@
     \item \textbf{波动高度持久}\\
     $\alpha+\beta=0.9928$，半衰期$\approx$96个交易日
 
-    \item \textbf{厚尾特征确认}\\
-    Student-t GARCH AIC远优于正态（差412）
+    \item \textbf{厚尾特征稳健确认}\\
+    Student-t分布在所有模型设定中均远优于正态（AIC降幅$>$400）
+
+    \item \textbf{非对称效应：部分证据，模型敏感}\\
+    GJR-Student-t: $\gamma=0.0217$，$p=0.046$（5\%显著）\\
+    EGARCH-Student-t: $\gamma=-0.0123$，$p=0.101$（未达常用显著水平）
   \end{enumerate}
 \end{frame}
 
-% === Slide 18: 局限 ===
+% === Slide 19: 局限 ===
 \begin{frame}{局限与证据边界}
   \begin{itemize}
     \item \textbf{GARCH是reduced-form模型}\\
@@ -324,20 +366,22 @@
     未被显式建模
     \item \textbf{遗漏变量}\\
     未纳入货币政策、流动性、国际市场等外部因素
-    \item \textbf{GJR-GARCH $\gamma$不显著}\\
-    在本文样本下不能强断言杠杆效应
+    \item \textbf{非对称效应：GJR-t显著但EGARCH证据较弱}\\
+    非对称结论对模型形式（GJR vs EGARCH）敏感，\\
+    不能简单断言杠杆效应存在或不存在
   \end{itemize}
 \end{frame}
 
-% === Slide 19: 结论 ===
+% === Slide 20: 结论 ===
 \begin{frame}{结论}
   \begin{enumerate}
     \item 沪深300日收益率存在显著的\textbf{波动聚集}，\\
     ARCH-LM检验提供了明确统计证据
     \item GARCH(1,1)能够刻画\textbf{时变条件波动率}，\\
     波动冲击高度持久（$\alpha+\beta=0.9928$）
-    \item 稳健性分析确认厚尾特征；\\
-    非对称效应在本样本中不显著
+    \item \textbf{厚尾分布稳健重要}：Student-t在所有模型设定中远优于正态
+    \item \textbf{非对称效应部分支持}：GJR-Student-t下$\gamma$显著（$p=0.046$），\\
+    但EGARCH证据较弱（$p=0.101$），结论对模型形式敏感
   \end{enumerate}
   \vspace{1em}
   \begin{center}
