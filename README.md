@@ -72,7 +72,9 @@ tables/
 
 paper/
 ├── assignment_draft.md                        # 论文初稿
-└── ai_usage_statement.md                      # AI使用声明
+├── assignment_final.pdf                       # 论文PDF
+├── ai_usage_statement.md                      # AI使用声明
+└── beamer_presentation.tex                    # Beamer汇报PPT源文件
 ```
 
 ## 主要发现
@@ -101,6 +103,18 @@ paper/
 - [pandoc](https://pandoc.org)：`pandoc assignment_draft.md -o assignment_final.pdf --pdf-engine=xelatex -V CJKmainfont="SimSun"`
 - [Typora](https://typora.io)：直接导出PDF
 - VS Code + Markdown PDF 插件
+
+## Beamer PPT 编译
+
+`paper/beamer_presentation.tex` 为约20分钟的Beamer汇报PPT源文件。本地编译：
+
+```bash
+# 需要 xelatex (TeX Live)
+xelatex beamer_presentation.tex
+xelatex beamer_presentation.tex   # 第二次以获得正确的目录
+```
+
+若中文字体不同，修改 `.tex` 文件中 `\setCJKmainfont{SimSun}` 等为系统可用字体（如 Windows 用 `SimSun`/`SimHei`/`KaiTi`，macOS 用 `Songti SC`/`Heiti SC`，Linux 用 `Noto Serif CJK SC`）。
 
 ## 注意事项
 
