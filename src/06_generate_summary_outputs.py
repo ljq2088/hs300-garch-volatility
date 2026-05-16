@@ -36,6 +36,8 @@ REQUIRED = {
         "tables/table4_model_comparison.md",
         "tables/table5_residual_diagnostics.csv",
         "tables/table5_residual_diagnostics.md",
+        "tables/table6_extended_asymmetric_models.csv",
+        "tables/table6_extended_asymmetric_models.md",
     ],
     "paper": [
         "paper/assignment_draft.md",

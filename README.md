@@ -68,7 +68,8 @@ tables/
 ├── table2_tests.csv/.md                       # 时间序列检验
 ├── table3_garch_main.csv/.md                  # GARCH(1,1)主模型参数（含SE/t/p）
 ├── table4_model_comparison.csv/.md            # 模型比较
-└── table5_residual_diagnostics.csv/.md        # 残差诊断
+├── table5_residual_diagnostics.csv/.md        # 残差诊断
+└── table6_extended_asymmetric_models.csv/.md  # 扩展非对称模型（GJR/EGARCH × Normal/Student-t）
 
 paper/
 ├── assignment_draft.md                        # 论文初稿
@@ -87,11 +88,12 @@ paper/
 | GARCH(1,1) β | 0.9195 (p<0.001) — 条件方差惯性极强 |
 | α+β | 0.9928 — 波动高度持久，半衰期≈96个交易日 |
 | Student-t | ν=5.15，AIC=19901.63，远优于正态GARCH (AIC=20313.98) |
-| GJR-GARCH | γ=0.0159，p=0.2172 — 为正但不显著，不能强断言存在杠杆效应 |
-| AR(1)-GARCH | AIC=20308.85，略优于常数均值GARCH |
+| GJR-GARCH-Normal | γ=0.0159，p=0.2172 — 为正但不显著，不能强断言存在杠杆效应 |
+| GJR-GARCH-Student-t | γ=0.0217，p=0.0463 — **在厚尾分布下显著**，非对称效应获统计支持 |
+| EGARCH-Student-t | γ=−0.0123，p=0.1007 — 边际显著，非对称结论对模型形式敏感 |
 | 残差诊断 | z_t² Ljung-Box和ARCH-LM均不显著，GARCH成功捕捉条件异方差 |
 
-**注意**：GJR-GARCH的γ为正但统计不显著（p=0.217），论文中对应写为"positive but not statistically significant"，不使用"杠杆效应存在"等过度表述。
+**注意**：GJR-GARCH在正态假设下非对称项不显著（p=0.217），但在Student-t设定下达到5%显著性（p=0.046）。EGARCH的非对称效应即使在Student-t下也仅边际显著（p=0.101）。因此核心稳健结论是波动聚集、厚尾和高度持久性，非对称效应证据对模型形式有一定敏感性。
 
 ## 当前状态
 

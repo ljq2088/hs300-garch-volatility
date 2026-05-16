@@ -34,8 +34,11 @@ def half_life(alpha_beta):
     return np.log(0.5) / np.log(alpha_beta)
 
 
-def _extract_fit_info(fit, model_name, is_gjr=False):
-    """从 arch fit 对象提取公共信息。"""
+def _extract_fit_info(fit, model_name, model_type="garch"):
+    """从 arch fit 对象提取公共信息。
+
+    model_type: "garch", "gjr", "egarch"
+    """
     p = fit.params
     se = fit.std_err
     tv = fit.tvalues
@@ -45,21 +48,26 @@ def _extract_fit_info(fit, model_name, is_gjr=False):
     alpha = p["alpha[1]"]
     beta = p["beta[1]"]
     mu = p.get("mu", np.nan)
-    gamma = p["gamma[1]"] if is_gjr else None
 
-    if is_gjr:
+    is_asymmetric = model_type in ("gjr", "egarch")
+    gamma = p["gamma[1]"] if is_asymmetric else None
+
+    if model_type == "egarch":
+        # EGARCH in log-variance space: persistence proxy = beta
+        pers = beta
+    elif model_type == "gjr":
         pers = alpha + beta + gamma / 2.0
     else:
         pers = alpha + beta
 
     hl = half_life(pers)
 
-    # p-values for key params
     def _pv(key):
         return pv.get(key, np.nan)
 
     return {
         "model": model_name,
+        "model_type": model_type,
         "mu": mu,
         "omega": omega,
         "alpha": alpha,
@@ -81,7 +89,7 @@ def _extract_fit_info(fit, model_name, is_gjr=False):
         "p_omega": _pv("omega"),
         "p_alpha": _pv("alpha[1]"),
         "p_beta": _pv("beta[1]"),
-        "p_gamma": _pv("gamma[1]") if is_gjr else None,
+        "p_gamma": _pv("gamma[1]") if is_asymmetric else None,
     }
 
 
@@ -90,7 +98,7 @@ def fit_garch_normal(ret_vals):
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, q=1,
                        dist="normal", rescale=False)
     fit = model.fit(disp="off")
-    return _extract_fit_info(fit, "GARCH(1,1)-Normal", is_gjr=False)
+    return _extract_fit_info(fit, "GARCH(1,1)-Normal", model_type="garch")
 
 
 def fit_garch_t(ret_vals):
@@ -98,7 +106,7 @@ def fit_garch_t(ret_vals):
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, q=1,
                        dist="t", rescale=False)
     fit = model.fit(disp="off")
-    r = _extract_fit_info(fit, "GARCH(1,1)-Student-t", is_gjr=False)
+    r = _extract_fit_info(fit, "GARCH(1,1)-Student-t", model_type="garch")
     r["nu"] = fit.params.get("nu", np.nan)
     return r
 
@@ -108,7 +116,7 @@ def fit_gjr_garch(ret_vals):
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, o=1, q=1,
                        dist="normal", rescale=False)
     fit = model.fit(disp="off")
-    return _extract_fit_info(fit, "GJR-GARCH(1,1)-Normal", is_gjr=True)
+    return _extract_fit_info(fit, "GJR-GARCH(1,1)-Normal", model_type="gjr")
 
 
 def fit_ar1_garch(ret_vals):
@@ -116,8 +124,36 @@ def fit_ar1_garch(ret_vals):
     model = arch_model(ret_vals, mean="AR", lags=1, vol="GARCH", p=1, q=1,
                        dist="normal", rescale=False)
     fit = model.fit(disp="off")
-    r = _extract_fit_info(fit, "AR(1)-GARCH(1,1)-Normal", is_gjr=False)
+    r = _extract_fit_info(fit, "AR(1)-GARCH(1,1)-Normal", model_type="garch")
     r["ar1"] = fit.params.get("y[1]", np.nan)
+    return r
+
+
+def fit_gjr_garch_t(ret_vals):
+    """进一步稳健性: GJR-GARCH(1,1) + Student-t 创新"""
+    model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, o=1, q=1,
+                       dist="t", rescale=False)
+    fit = model.fit(disp="off")
+    r = _extract_fit_info(fit, "GJR-GARCH(1,1)-Student-t", model_type="gjr")
+    r["nu"] = fit.params.get("nu", np.nan)
+    return r
+
+
+def fit_egarch_normal(ret_vals):
+    """进一步稳健性: EGARCH(1,1) + 正态创新"""
+    model = arch_model(ret_vals, mean="Constant", vol="EGARCH", p=1, o=1, q=1,
+                       dist="normal", rescale=False)
+    fit = model.fit(disp="off")
+    return _extract_fit_info(fit, "EGARCH(1,1)-Normal", model_type="egarch")
+
+
+def fit_egarch_t(ret_vals):
+    """进一步稳健性: EGARCH(1,1) + Student-t 创新"""
+    model = arch_model(ret_vals, mean="Constant", vol="EGARCH", p=1, o=1, q=1,
+                       dist="t", rescale=False)
+    fit = model.fit(disp="off")
+    r = _extract_fit_info(fit, "EGARCH(1,1)-Student-t", model_type="egarch")
+    r["nu"] = fit.params.get("nu", np.nan)
     return r
 
 
@@ -192,17 +228,23 @@ def save_main_params(result, dates):
 
 
 def _gamma_significance_text(gamma, p_gamma):
-    """根据 gamma 值和 p 值生成严谨的解释文本。"""
+    """根据 gamma 值和 p 值生成严谨的解释文本。
+    对于 GJR-GARCH: gamma > 0 表示坏消息放大波动。
+    对于 EGARCH: gamma < 0 表示杠杆效应（坏消息放大波动）。
+    """
     if gamma is None or np.isnan(p_gamma):
         return "N/A"
-    if gamma > 0 and p_gamma < 0.05:
-        return "significant positive asymmetry (bad-news > good-news)"
-    if gamma > 0 and p_gamma < 0.10:
-        return "weak positive asymmetry (marginally significant)"
-    if gamma > 0 and p_gamma >= 0.10:
-        return "positive but not statistically significant"
-    if gamma <= 0:
-        return "no positive asymmetry evidence"
+    has_leverage = gamma != 0  # non-zero asymmetry in the expected direction
+    if has_leverage and p_gamma < 0.05:
+        direction = "positive" if gamma > 0 else "negative"
+        return f"significant ({direction} asymmetry, p<0.05)"
+    if has_leverage and p_gamma < 0.10:
+        direction = "positive" if gamma > 0 else "negative"
+        return f"weak/marginal ({direction} asymmetry, p<0.10)"
+    if p_gamma >= 0.10:
+        direction = "positive" if gamma > 0 else "negative"
+        return f"{direction} but not statistically significant (p={p_gamma:.4f})"
+    return "N/A"
 
 
 def save_comparison_table(results):
@@ -249,6 +291,54 @@ def save_comparison_table(results):
     print("[INFO] table4_model_comparison saved.")
 
 
+def save_extended_asymmetric_table(results):
+    """保存进一步稳健性非对称模型比较表 (Table 6)。"""
+    rows = []
+    for r in results:
+        gamma = r.get("gamma")
+        p_gamma = r.get("p_gamma")
+        nu = r.get("nu", None)
+        model_type = r.get("model_type", "garch")
+
+        gtext = _gamma_significance_text(gamma, p_gamma)
+
+        notes_parts = []
+        if model_type == "egarch":
+            notes_parts.append("EGARCH persistence proxy = |beta| (log-variance space)")
+        if nu is not None and not np.isnan(nu):
+            notes_parts.append(f"nu={nu:.4f}")
+        notes_parts.append(f"asymmetry: {gtext}")
+        notes = "; ".join(notes_parts)
+
+        rows.append({
+            "model": r["model"],
+            "distribution": "Normal" if "Normal" in r["model"] else "Student-t",
+            "loglikelihood": r["loglik"],
+            "AIC": r["aic"],
+            "BIC": r["bic"],
+            "omega": r["omega"],
+            "alpha": r["alpha"],
+            "beta": r["beta"],
+            "gamma": gamma if gamma is not None else "",
+            "gamma_pvalue": f"{p_gamma:.4f}" if p_gamma is not None and not np.isnan(p_gamma) else "",
+            "nu": f"{nu:.4f}" if nu is not None and not np.isnan(nu) else "",
+            "vol_persistence_proxy": r["alpha_beta"],
+            "half_life_days": f"{r['half_life']:.1f}" if r["half_life"] != np.inf else "inf",
+            "notes": notes,
+        })
+
+    tbl = pd.DataFrame(rows)
+    tbl.to_csv(TABLES / "table6_extended_asymmetric_models.csv", index=False)
+    md = tabulate(tbl, headers="keys", tablefmt="github", showindex=False,
+                  floatfmt=".6f")
+    (TABLES / "table6_extended_asymmetric_models.md").write_text(
+        "Table 6: Extended asymmetric volatility models — GJR-GARCH & EGARCH with Normal/Student-t\n\n"
+        + md + "\n",
+        encoding="utf-8",
+    )
+    print("[INFO] table6_extended_asymmetric_models saved.")
+
+
 def plot_conditional_volatility(dates, main_result):
     """条件波动率图"""
     cv = main_result["cond_vol"]
@@ -279,12 +369,22 @@ def main():
     gjr = fit_gjr_garch(ret_vals)
     print("[INFO] Fitting AR(1)-GARCH(1,1) ...")
     ar1g = fit_ar1_garch(ret_vals)
+    print("[INFO] Fitting GJR-GARCH(1,1)-Student-t ...")
+    gjr_t = fit_gjr_garch_t(ret_vals)
+    print("[INFO] Fitting EGARCH(1,1)-Normal ...")
+    egarch_n = fit_egarch_normal(ret_vals)
+    print("[INFO] Fitting EGARCH(1,1)-Student-t ...")
+    egarch_t = fit_egarch_t(ret_vals)
 
     # 保存主模型参数（含标准化残差）
     save_main_params(garch_n, dates)
 
     # 模型比较
     save_comparison_table([garch_n, garch_t, gjr, ar1g])
+
+    # 进一步稳健性：非对称模型比较 (Table 6)
+    asymmetric_models = [gjr, gjr_t, egarch_n, egarch_t]
+    save_extended_asymmetric_table(asymmetric_models)
 
     # 条件波动率图
     plot_conditional_volatility(dates, garch_n)
@@ -315,6 +415,19 @@ def main():
     print("\n--- AR(1)-GARCH(1,1) ---")
     print(f"  AR(1) coeff = {ar1g.get('ar1', np.nan):.4f}")
     print(f"  AIC         = {ar1g['aic']:.2f}")
+
+    print("\n--- Further Robustness: Asymmetric Models ---")
+    for r in asymmetric_models:
+        gamma = r.get("gamma")
+        p_gamma = r.get("p_gamma")
+        nu = r.get("nu", None)
+        print(f"\n  {r['model']}:")
+        print(f"    AIC = {r['aic']:.2f}, BIC = {r['bic']:.2f}")
+        if nu is not None and not np.isnan(nu):
+            print(f"    nu = {nu:.4f}")
+        print(f"    gamma = {gamma:.6f}, p_gamma = {p_gamma:.4f}" if gamma is not None else "    gamma = N/A")
+        print(f"    interpretation: {_gamma_significance_text(gamma, p_gamma)}")
+        print(f"    persistence proxy = {r['alpha_beta']:.4f}")
 
 
 if __name__ == "__main__":
