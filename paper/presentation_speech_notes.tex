@@ -175,9 +175,9 @@ r_t = 100[\log(P_t) - \log(P_{t-1})]
 \addcontentsline{toc}{section}{Slide 9：方法：GARCH(1,1)模型}
 
 \subsection*{讲稿}
-这是本文的主模型——GARCH(1,1)。它由两个方程组成。
+这是本文的主模型——GARCH(1,1)。首先看条件方差的定义：\(\sigma_t^2 = \text{Var}(r_t \mid \mathcal{F}_{t-1})\)。意思是：在已知截至昨天所有历史信息的条件下，今天收益率的不确定性有多大。条件方差随时间变化——市场动荡时高，平静时低。
 
-均值方程很简单：\(r_t = \mu + \varepsilon_t\)。就是说收益率等于一个常数加上一个随机扰动。我们不试图预测方向。
+模型由两个方程组成。均值方程很简单：\(r_t = \mu + \varepsilon_t\)。就是说收益率等于一个常数加上一个随机扰动。我们不试图预测方向。
 
 方差方程是核心：\(\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2\)。三个参数各有含义：\(\omega\) 是基础波动水平；\(\alpha\) 度量新冲击对当期波动的影响——昨天的大扰动会不会让今天的波动变大；\(\beta\) 度量波动自身的持续性——昨天的波动状态会不会延续到今天。
 
@@ -189,10 +189,12 @@ r_t = 100[\log(P_t) - \log(P_{t-1})]
 
 \paragraph{GARCH(1,1)模型} GARCH = Generalized AutoRegressive Conditional Heteroskedasticity（广义自回归条件异方差），由Bollerslev（1986）在Engle（1982）的ARCH模型基础上推广。完整设定：
 \begin{align*}
+\sigma_t^2 &= \text{Var}(r_t \mid \mathcal{F}_{t-1}) \quad \text{（条件方差定义）}\\
 r_t &= \mu + \varepsilon_t \quad \text{（均值方程）}\\
 \varepsilon_t &= \sigma_t z_t, \quad z_t \stackrel{i.i.d.}{\sim} N(0,1)\\
 \sigma_t^2 &= \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2 \quad \text{（方差方程）}
 \end{align*}
+其中 \(\mathcal{F}_{t-1}\) 表示到 \(t-1\) 时刻为止的所有历史信息（即过去所有收益率的集合）。
 约束条件：\(\omega > 0\)，\(\alpha \geq 0\)，\(\beta \geq 0\)，\(\alpha + \beta < 1\)（弱平稳条件）。
 
 \paragraph{参数解释}
@@ -313,13 +315,28 @@ r_t &= \mu + \varepsilon_t \quad \text{（均值方程）}\\
 \subsection*{讲稿}
 因为前面描述性统计已经发现收益率有明显的厚尾特征，正态分布假设可能不合适。所以第一个稳健性检验就是把新息分布从正态换成Student-t。
 
-结果非常明确。估计的自由度约5.15——自由度越小尾部越厚，5.15这个值确认了收益率确实比正态分布厚尾很多。
+模型结构和GARCH(1,1)完全一样——同样的均值方程和方差方程——唯一的区别是：把 \(z_t \stackrel{i.i.d.}{\sim} N(0,1)\) 换成 \(z_t \stackrel{i.i.d.}{\sim} t(\nu)\)。这里\(\nu\)是自由度参数，控制尾部的厚薄程度。PPT上给出了标准化Student-t分布的密度函数公式，分母里\(\sqrt{\nu-2}\)保证了方差为1。
+
+结果非常明确。估计的自由度约5.15——自由度越小尾部越厚，5.15这个值确认了收益率确实比正态分布厚尾很多。而且 \(\nu \to \infty\) 时t分布趋近正态，所以5.15这个值离无穷远很远，厚度差异很大。
 
 AIC从20314降到19902，降幅超过400。AIC越低越好，所以Student-t GARCH明显优于正态GARCH。再看\(\alpha + \beta\)，Student-t下是0.9946，跟主模型的0.9928几乎一致。这说明核心发现——波动聚集和高持久性——不依赖于正态分布假设。
 
 \subsection*{名词解释与数学定义}
 
-\paragraph{Student-t分布} 一种比正态分布尾部更厚的对称分布，由自由度参数 \(\nu\) 控制。\(\nu\) 越小，尾部越厚，极端值概率越大。当 \(\nu \to \infty\) 时，t分布趋近于正态分布。对金融收益率，通常估计出 \(\nu\) 在3到8之间。需要 \(\nu > 2\) 以保证方差存在。
+\paragraph{Student-t GARCH(1,1) 模型设定}
+\begin{align*}
+r_t &= \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t\\
+\sigma_t^2 &= \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2\\
+z_t &\stackrel{i.i.d.}{\sim} t(\nu), \quad \nu > 2
+\end{align*}
+标准化Student-t密度函数（方差=1）：
+\[
+f(z;\nu) = \frac{\Gamma(\frac{\nu+1}{2})}{\sqrt{(\nu-2)\pi}\,\Gamma(\frac{\nu}{2})}
+\left(1 + \frac{z^2}{\nu-2}\right)^{-(\nu+1)/2}
+\]
+其中 \(\Gamma(\cdot)\) 是Gamma函数。分母中的 \(\sqrt{\nu-2}\) 使标准化后的分布方差为1，与标准正态 \(N(0,1)\) 的方差一致。约束 \(\nu > 2\) 保证方差存在。
+
+\paragraph{Student-t分布} 一种比正态分布尾部更厚的对称分布，由自由度参数 \(\nu\) 控制。\(\nu\) 越小，尾部越厚，极端值概率越大。当 \(\nu \to \infty\) 时，t分布趋近于正态分布。对金融收益率，通常估计出 \(\nu\) 在3到8之间。
 
 \paragraph{AIC（Akaike Information Criterion）} 模型选择准则：\(\text{AIC} = -2\log L + 2k\)，其中 \(\log L\) 是对数似然值，\(k\) 是参数个数。AIC越小越好。它权衡了拟合优度和模型复杂度，对额外参数施加惩罚。AIC差大于2通常被视为有\"实质性差异\"，大于10则是\"非常强\"的证据。
 

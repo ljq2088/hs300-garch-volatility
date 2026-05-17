@@ -131,6 +131,9 @@
 
 % === Slide 9: 方法论 — GARCH(1,1) ===
 \begin{frame}{方法：GARCH(1,1)模型}
+  \begin{block}{条件方差定义}
+    \[ \sigma_t^2 = \text{Var}(r_t \mid \mathcal{F}_{t-1}) \]
+  \end{block}
   \begin{block}{均值方程}
     \[ r_t = \mu + \varepsilon_t \]
   \end{block}
@@ -230,13 +233,22 @@
 
 % === Slide 14: 稳健性 — Student-t ===
 \begin{frame}{稳健性1: Student-t GARCH(1,1)}
+  \begin{block}{模型设定}
+    \[ r_t = \mu + \varepsilon_t, \quad \varepsilon_t = \sigma_t z_t \]
+    \[ \sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2 \]
+    \[ z_t \stackrel{i.i.d.}{\sim} t(\nu), \quad \nu > 2 \]
+    标准化Student-t密度：
+    \[ f(z;\nu) = \frac{\Gamma(\frac{\nu+1}{2})}{\sqrt{(\nu-2)\pi}\,\Gamma(\frac{\nu}{2})}
+    \left(1 + \frac{z^2}{\nu-2}\right)^{-(\nu+1)/2} \]
+  \end{block}
   \begin{columns}
-    \column{0.5\textwidth}
+    \column{0.45\textwidth}
       \begin{itemize}
-        \item 创新分布：$z_t \sim t(\nu)$
         \item $\hat{\nu}=5.1541$：尾部显著厚于正态
+        \item $\nu$ 越小 $\Rightarrow$ 尾部越厚，极端值概率越大
+        \item $\nu \to \infty$ 时 $t(\nu) \to N(0,1)$
       \end{itemize}
-    \column{0.5\textwidth}
+    \column{0.55\textwidth}
       \begin{table}
         \centering
         \begin{tabular}{lrr}
@@ -250,7 +262,7 @@
         \end{tabular}
       \end{table}
   \end{columns}
-  \vspace{1em}
+  \vspace{0.5em}
   \begin{block}{结论}
     Student-t显著优于正态（AIC低412），\textbf{收益率厚尾特征得到确认}。\\
     核心结论（波动聚集、高持久性）不依赖正态分布假设。
