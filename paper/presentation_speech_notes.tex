@@ -1,0 +1,496 @@
+% !TEX program = xelatex
+% 高级时间序列分析课程作业 — 逐页汇报讲稿与名词解释
+% 编译: xelatex presentation_speech_notes.tex (两次)
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\geometry{margin=1in}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+
+\title{中国股票市场波动聚集与风险预警：\\基于沪深300指数收益率的GARCH模型分析\\[1em]
+\large 逐页汇报讲稿与名词解释}
+\author{赖景祺}
+\date{2026年5月}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Slide 1：封面}
+\addcontentsline{toc}{section}{Slide 1：封面}
+
+\subsection*{讲稿}
+各位老师好。今天我汇报的题目是《中国股票市场波动聚集与风险预警：基于沪深300指数收益率的GARCH模型分析》。这是高级时间序列分析课程的写作作业。
+
+\subsection*{名词解释与数学定义}
+本页为封面，无特殊术语需要解释。GARCH 模型的详细定义将在后续 Slide 中展开。
+
+\newpage
+\section*{Slide 2：研究动机}
+\addcontentsline{toc}{section}{Slide 2：研究动机}
+
+\subsection*{讲稿}
+中国A股市场波动剧烈，风险监测既是投资者的核心关切，也是监管层的重要任务。
+
+金融风险不仅仅体现在价格涨跌方向上，也体现为\emph{不确定性程度}会随时间变化。比如，2008年金融危机期间，市场每天的波动幅度明显比平时大得多。
+
+学术界有大量实证研究发现金融收益率存在\emph{波动聚集}现象——所谓波动聚集，就是大波动倾向于集中出现，平静期和剧烈波动期交替发生。
+
+沪深300指数覆盖了沪深两市市值最大、流动性最好的300只股票，是中国A股市场最具代表性的基准指数。本文使用GARCH族模型来研究它的时变风险特征。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{波动聚集（Volatility Clustering）} 金融时间序列中，大的价格变化倾向于跟随大的价格变化，小的价格变化倾向于跟随小的价格变化。在统计上表现为：收益率序列的绝对值或平方值存在正的序列相关。换句话说，市场不会每天均匀地波动——会有一段\"暴风雨\"时期和一段\"平静\"时期交替出现。
+
+\paragraph{沪深300指数} 由沪深证券交易所于2005年4月8日联合发布，选取沪深两市市值大、流动性好的300只股票作为样本，覆盖约60\%的A股总市值。它是中国A股市场最广泛使用的基准指数之一。
+
+\paragraph{金融风险} 在本文语境下，主要指市场风险——即资产价格波动的不确定性。金融风险可用收益率的方差或标准差来度量。
+
+\newpage
+\section*{Slide 3：研究问题}
+\addcontentsline{toc}{section}{Slide 3：研究问题}
+
+\subsection*{讲稿}
+本文聚焦两个核心问题。第一，沪深300指数的日收益率是否存在波动聚集？第二，GARCH模型能不能刻画它的时变条件波动率？
+
+这里有一个非常重要的区分：GARCH模型刻画的是\emph{时变条件方差}，也就是不确定性本身的大小随时间怎么变。它\emph{不预测}指数涨跌方向。换句话说，GARCH告诉你\"现在市场有多不确定\"，而不是\"市场会涨还是会跌\"。这个区分在整篇论文和这次汇报中都会反复强调。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{时变条件方差（Time-Varying Conditional Variance）} 条件方差是在给定过去信息（即历史收益率）的前提下，对下一期收益率方差的估计。\"时变\"意味着这个方差不是常数，而是随时间变化的。符号记为 \(\sigma_t^2 = \text{Var}(r_t \mid \mathcal{F}_{t-1})\)，其中 \(\mathcal{F}_{t-1}\) 表示到 \(t-1\) 时刻为止的所有历史信息。
+
+\paragraph{条件方差 vs 无条件方差} 无条件方差是长期平均方差（一个常数）。条件方差则随着时间变化：市场动荡时高，市场平静时低。GARCH模型的核心贡献就是建模这种时变的条件方差。
+
+\paragraph{GARCH不预测方向} GARCH的均值方程通常只是常数（或很小的自回归项），它不试图预测 \(r_t\) 是正还是负。它只建模 \(\sigma_t^2\)——即波动的\emph{幅度}。这是理解GARCH模型功能边界的关键。
+
+\newpage
+\section*{Slide 4：数据说明}
+\addcontentsline{toc}{section}{Slide 4：数据说明}
+
+\subsection*{讲稿}
+数据来自东方财富，通过AkShare这个Python库获取。样本区间是从2002年1月7号到2026年5月11号，日度频率，一共5902个交易日。变量就是沪深300的收盘价，记作 \(P_t\)。
+
+数据获取用了双重保险：优先用第一个接口，如果失败就自动回退到第二个接口。这样保证了代码的可复现性。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{AkShare} 一个开源的Python金融数据接口库，从东方财富、新浪财经等中文数据源获取A股、期货、宏观经济等数据。本项目使用它的沪深300指数日行情接口。
+
+\paragraph{收盘价 \(P_t\)} 第 \(t\) 个交易日结束时的最后一笔成交价格。本文所有收益率计算均基于收盘价。
+
+\paragraph{日度频率} 每个交易日一个观测。A股市场每年大约有240--250个交易日。5902个交易日对应约23--24个日历年。
+
+\newpage
+\section*{Slide 5：收益率计算}
+\addcontentsline{toc}{section}{Slide 5：收益率计算}
+
+\subsection*{讲稿}
+收益率计算公式是：
+\[
+r_t = 100[\log(P_t) - \log(P_{t-1})]
+\]
+为什么用对数收益率？因为对数收益率有时间可加性：比如三天的总收益率就是把三个单日对数收益率加起来。乘以100是为了让数字以百分比为单位，方便读。
+
+第一个交易日没有前一日的收盘价，所以第一个收益率是缺失值，删除之后得到有效样本5902个。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{对数收益率（Log Return）} 定义为 \(r_t = \log(P_t) - \log(P_{t-1}) = \log(P_t / P_{t-1})\)。当价格变化较小时，对数收益率近似等于简单百分比收益率 \((P_t - P_{t-1}) / P_{t-1}\)。其重要性质是\emph{时间可加性}：\(r_{t,t+k} = r_{t+1} + r_{t+2} + \cdots + r_{t+k}\)。
+
+\paragraph{乘以100} 将收益率单位从\"小数\"转换为\"百分比\"。例如，\(r_t = 0.015\)（即1.5\%的收益率）写作1.5。这样做不影响统计推断，只是尺度变换。
+
+\paragraph{收益率（Return）} 金融中表示资产价格在一段时间内的相对变化率。与价格不同，收益率通常是平稳的，更适合统计建模。
+
+\newpage
+\section*{Slide 6：描述性统计}
+\addcontentsline{toc}{section}{Slide 6：描述性统计}
+
+\subsection*{讲稿}
+表1是描述性统计。均值0.0224\%，非常接近零——平均下来每天的收益率基本为零。标准差约1.56\%，说明日收益率典型波动在正负一个多百分点。
+
+偏度是负的，说明分布左边尾巴比右边尾巴更长——出现极端负收益的频率和幅度大于极端正收益。
+
+超额峰度约4.73，远大于零。正态分布的超额峰度是零。所以这个收益率序列是\emph{尖峰厚尾}的：中间比正态分布更高更尖，两端的极端值比正态分布多得多。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{偏度（Skewness）} 度量分布对称性的统计量。正态分布的偏度为0。负偏度表示左尾比右尾更长/更重，即极端负值比极端正值更常见或更极端。公式：
+\[
+\text{Skewness} = \frac{\mathbb{E}[(X - \mu)^3]}{\sigma^3}
+\]
+
+\paragraph{超额峰度（Excess Kurtosis）} 度量分布尾部厚薄相对于正态分布的统计量。正态分布的超额峰度为0。超额峰度 \(>0\) 意味着分布比正态分布有更厚的尾部（更多极端值）和更尖的峰部。公式：
+\[
+\text{Excess Kurtosis} = \frac{\mathbb{E}[(X - \mu)^4]}{\sigma^4} - 3
+\]
+（其中减3是因为正态分布的原始峰度为3。）
+
+\paragraph{尖峰厚尾} 描述金融收益率分布的典型特征：中间比正态分布更集中（尖峰），两端的极端值比正态分布更多（厚尾）。这意味着如果假设收益率为正态分布，会严重低估极端事件（如市场崩盘）发生的概率。
+
+\paragraph{标准差（Standard Deviation）} 波动率的常用度量，是方差的平方根：\(\sigma = \sqrt{\text{Var}(X)}\)。这里1.56\%表示日收益率的典型波动幅度。
+
+\newpage
+\section*{Slide 7：收益率与平方收益率}
+\addcontentsline{toc}{section}{Slide 7：收益率与平方收益率}
+
+\subsection*{讲稿}
+上面这张图是收益率序列。可以看到，收益率围绕零上下波动，但在2008年金融危机、2015年股灾、2020年初疫情这些时期，波动幅度明显放大。
+
+下面这张图是平方收益率，相当于把波动的能量提取出来。可以非常清楚看到，大的平方值集中出现在几个时段，这就是波动聚集的直观视觉证据。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{平方收益率 \(r_t^2\)} 收益率平方后消除了正负号，只保留波动幅度信息。\(r_t^2\) 可以看作波动率的一个\"带噪代理变量\"，因为 \(\mathbb{E}[r_t^2 \mid \mathcal{F}_{t-1}] = \sigma_t^2\)（在零均值假设下）。平方收益率的自相关性是波动聚集的统计表现。
+
+\paragraph{波动率（Volatility）} 金融中表示资产收益率不确定性的度量。通常用收益率的标准差来表示。波动率越高，意味着资产价格的涨跌幅度越大，风险也越大。波动率本身不可直接观测，需要通过模型来估计。
+
+\paragraph{2008/2015/2020高波动时段} 2008年对应全球金融危机，2015年对应中国股市异常波动（千股跌停），2020年初对应新冠疫情冲击。GARCH模型应该能够捕捉这些时段的条件方差上升。
+
+\newpage
+\section*{Slide 8：收益率分布}
+\addcontentsline{toc}{section}{Slide 8：收益率分布}
+
+\subsection*{讲稿}
+这张直方图把收益率分布和正态分布叠在一起比较。蓝色柱子是实际数据，红色曲线是同均值和同方差的正态分布参照。
+
+可以明显看到两个特征：第一，实际分布的中间柱子比正态分布更高——这就是\"尖峰\"。第二，实际分布的两端比正态分布远得多——正态分布预测在正负5个标准差之外几乎不可能出现观测，但我们的数据里确实出现了。这就是\"厚尾\"。
+
+这个发现直接指向我们后面要做的稳健性检验：既然正态分布假设不太合适，我们就需要用Student-t分布来替代。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{正态分布假设} 经典GARCH模型通常假设标准化新息 \(z_t \sim N(0,1)\)。但金融收益率往往不满足正态性。如果新息的真实分布比正态更厚尾，那么基于正态假设的极大似然估计仍然可能是一致估计（QMLE性质），但效率会降低，且基于正态的预测区间会太窄。
+
+\paragraph{为什么厚尾很重要} 假设正态分布意味着市场单日暴跌超过5个标准差的概率约为 \(2.9 \times 10^{-7}\)（几乎不可能）。但现实中，这种事件的发生频率要高得多。如果用正态分布来评估风险，会严重低估极端风险（如VaR被低估）。
+
+\newpage
+\section*{Slide 9：方法：GARCH(1,1)模型}
+\addcontentsline{toc}{section}{Slide 9：方法：GARCH(1,1)模型}
+
+\subsection*{讲稿}
+这是本文的主模型——GARCH(1,1)。它由两个方程组成。
+
+均值方程很简单：\(r_t = \mu + \varepsilon_t\)。就是说收益率等于一个常数加上一个随机扰动。我们不试图预测方向。
+
+方差方程是核心：\(\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2\)。三个参数各有含义：\(\omega\) 是基础波动水平；\(\alpha\) 度量新冲击对当期波动的影响——昨天的大扰动会不会让今天的波动变大；\(\beta\) 度量波动自身的持续性——昨天的波动状态会不会延续到今天。
+
+\(\alpha + \beta\) 是最重要的指标：如果接近1，说明波动冲击非常持久。等于1是IGARCH的边界情形，超过1就不平稳了。
+
+半衰期公式是 \(\log(0.5) / \log(\alpha + \beta)\)，意思是波动冲击衰减到一半需要多少个交易日。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{GARCH(1,1)模型} GARCH = Generalized AutoRegressive Conditional Heteroskedasticity（广义自回归条件异方差），由Bollerslev（1986）在Engle（1982）的ARCH模型基础上推广。完整设定：
+\begin{align*}
+r_t &= \mu + \varepsilon_t \quad \text{（均值方程）}\\
+\varepsilon_t &= \sigma_t z_t, \quad z_t \stackrel{i.i.d.}{\sim} N(0,1)\\
+\sigma_t^2 &= \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2 \quad \text{（方差方程）}
+\end{align*}
+约束条件：\(\omega > 0\)，\(\alpha \geq 0\)，\(\beta \geq 0\)，\(\alpha + \beta < 1\)（弱平稳条件）。
+
+\paragraph{参数解释}
+\begin{itemize}[nosep]
+\item \(\omega\)：无条件方差的基础分量。必须为正。
+\item \(\alpha\)：ARCH效应参数。度量前一期的\"新息冲击\" \(\varepsilon_{t-1}^2\) 对当期条件方差的直接影响。\(\alpha\) 越大，市场对新信息的反应越剧烈。
+\item \(\beta\)：GARCH效应参数。度量波动率的惯性。\(\beta\) 越大，一次波动升高后持续时间越长。
+\item \(\alpha + \beta\)：波动持久性指数。\(\alpha + \beta < 1\) 保证无条件方差有限。越接近1，波动冲击衰减越慢。
+\end{itemize}
+
+\paragraph{半衰期（Half-life）} 波动冲击衰减到其初始影响一半所需的时间。公式：\(\text{Half-life} = \log(0.5) / \log(\alpha + \beta)\)。例如，\(\alpha + \beta = 0.99\) 时，半衰期约69天。
+
+\paragraph{弱平稳（Weak Stationarity）} 时间序列的均值、方差和自协方差不随时间变化。对于GARCH(1,1)，弱平稳条件是 \(\alpha + \beta < 1\)。
+
+\paragraph{IGARCH（Integrated GARCH）} 当 \(\alpha + \beta = 1\) 时的边界情形。此时无条件方差不存在（趋向无穷）。波动冲击永久持续，类似于单位根过程。
+
+\newpage
+\section*{Slide 10：预备检验}
+\addcontentsline{toc}{section}{Slide 10：预备检验}
+
+\subsection*{讲稿}
+在拟合GARCH之前，必须先做三个铺垫检验。
+
+第一，ADF检验。统计量约负18，p值近乎零，强烈拒绝单位根。收益率是平稳的——这是使用GARCH的前提。
+
+第二，对平方收益率的Ljung-Box检验。滞后10阶统计量1525，滞后20阶2379，p值都近乎零。这说明平方收益率有极强的序列依赖——是波动聚集的明确统计信号。
+
+第三，ARCH-LM检验。滞后5、10、12阶全部极其显著。这意味着存在条件异方差，使用GARCH有充分的统计依据。
+
+三个检验全部指向同一个结论：这个序列适合用GARCH来建模。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{ADF检验（Augmented Dickey-Fuller Test）} 检验时间序列是否存在单位根（即是否非平稳）。原假设 \(H_0\)：序列有单位根（非平稳）。备择假设 \(H_1\)：序列平稳。如果p值很小（如 \(<0.05\)），则拒绝原假设，认为序列平稳。GARCH模型要求收益率序列是平稳的。
+
+\paragraph{Ljung-Box Q检验} 检验一组自相关系数是否联合为零。原假设 \(H_0\)：前 \(m\) 阶自相关系数全为零（无序列相关）。对 \(r_t^2\) 使用此检验是检测波动聚集的常用方法：如果 \(r_t^2\) 存在显著自相关，说明大幅波动倾向于聚集出现。
+
+\paragraph{ARCH-LM检验（Engle's ARCH Test）} 专门检验是否存在ARCH效应的检验。步骤：(1) 估计均值方程得到残差 \(\hat{\varepsilon}_t\)；(2) 将 \(\hat{\varepsilon}_t^2\) 对其自身滞后值做辅助回归；(3) 计算 \(TR^2\) 统计量，在无ARCH效应的原假设下渐近服从 \(\chi^2(q)\) 分布。拒绝原假设意味着存在条件异方差，应该使用ARCH/GARCH类模型。
+
+\newpage
+\section*{Slide 11：GARCH(1,1)参数估计}
+\addcontentsline{toc}{section}{Slide 11：GARCH(1,1)参数估计}
+
+\subsection*{讲稿}
+这是主模型的参数估计结果。
+
+首先看均值：\(\mu = 0.0247\)，p值约0.12，不显著。这很正常——日度收益率的方向本来就几乎无法预测。所以均值方程只是一个\"占位\"。
+
+再看方差方程。\(\omega = 0.0216\)，显著，是基础波动水平。
+
+\(\alpha = 0.0734\)，p值 < 0.001，高度显著。这说明前一天的平方冲击对今天的条件方差有显著的正向影响。大的波动确实会抬升未来的波动。
+
+\(\beta = 0.9195\)，p值 < 0.001，非常大且高度显著。这说明条件方差本身有极强的惯性——昨天的波动状态很大程度上决定了今天的波动状态。
+
+最关键的数字：\(\alpha + \beta = 0.9928\)。这个值极其接近1。对应的半衰期约96个交易日，大概4.6个月。一次波动冲击需要将近5个月才能衰减一半，说明沪深300的波动冲击非常持久。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{标准误（Standard Error）} 参数估计量的抽样分布标准差。标准误越小，估计越精确。在MLE框架下，标准误来自信息矩阵的逆。
+
+\paragraph{t值（t-statistic）} 参数估计值除以其标准误。在正态性假设下，t值可用于检验参数是否为零。绝对值大于约1.96表示在5\%水平上显著（双侧检验）。公式：\(t = \hat{\theta} / \text{SE}(\hat{\theta})\)。
+
+\paragraph{p值（p-value）} 在原假设为真（如参数=0）的情况下，观察到当前或更极端统计量的概率。p值越小，拒绝原假设的证据越强。常用阈值为0.05（5\%显著性水平）。
+
+\paragraph{极大似然估计（MLE）} GARCH模型的参数通过最大化似然函数来估计。假设 \(z_t \stackrel{i.i.d.}{\sim} N(0,1)\)，条件对数似然函数为：
+\[
+\ell(\theta) = -\frac{T}{2}\log(2\pi) - \frac{1}{2}\sum_{t=1}^{T}\left(\log\sigma_t^2 + \frac{\varepsilon_t^2}{\sigma_t^2}\right)
+\]
+
+\paragraph{QMLE（拟极大似然估计）} 即使真实分布不是正态分布，只要均值方程和方差方程设定正确，基于正态似然的估计量仍然是一致和渐近正态的（Bollerslev \& Wooldridge, 1992）。标准误需要进行稳健修正（Bollerslev-Wooldridge稳健标准误）。
+
+\paragraph{无条件方差} 在 \(\alpha+\beta < 1\) 下：\(\text{Var}(\varepsilon_t) = \omega / (1-\alpha-\beta)\)。当 \(\alpha + \beta = 0.9928\) 时，分母非常小，无条件方差大约是 \(\omega / 0.0072\)，相对较大。
+
+\newpage
+\section*{Slide 12：条件波动率估计}
+\addcontentsline{toc}{section}{Slide 12：条件波动率估计}
+
+\subsection*{讲稿}
+这张图是GARCH(1,1)估计出来的条件波动率序列。
+
+可以看到，模型自动识别出了几个高风险时段：2008年全球金融危机期间条件波动率急剧攀升；2015年中国股市异常波动期间出现第二轮峰值；2020年初新冠疫情冲击再度推升波动率。而在2012到2014年这类相对平静的年份，条件波动率处于低位。
+
+再次强调：条件波动率反映的是\emph{时变风险状态}，不是涨跌方向。条件波动率高说明模型认为当前不确定性大，至于指数具体会涨还是跌，这个模型不回答。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{条件波动率 \(\hat{\sigma}_t\)} GARCH模型对每个时点 \(t\) 估计的标准差。它是条件方差 \(\sigma_t^2\) 的平方根。条件波动率序列可以用作时变风险指标：数值上升表示模型判断当前风险加大。
+
+\paragraph{条件波动率与市场风险} 条件波动率可以被理解为\"基于历史数据，模型认为当前市场不确定性有多大\"。这不是预测未来，而是基于过去信息对当前状态的一种推断。在实践中常用于风险管理（如计算VaR）和投资组合配置。
+
+\newpage
+\section*{Slide 13：残差诊断}
+\addcontentsline{toc}{section}{Slide 13：残差诊断}
+
+\subsection*{讲稿}
+残差诊断是检验GARCH模型是否\"够用\"的关键步骤。我们对标准化残差 \(z_t = \varepsilon_t / \sigma_t\) 做诊断。
+
+如果GARCH模型成功捕捉了条件异方差，那么 \(z_t\) 应该逼近白噪声——它的平方不应该再有自相关，也不应该有ARCH效应。
+
+来看结果。对 \(z_t\) 本身的Ljung-Box检验在滞后10阶和20阶仍然显著——说明标准化残差的水平项还存在自相关。这提示常数均值方程设定过于简单，可以改进为ARMA结构。
+
+但看关键部分：对 \(z_t^2\) 的Ljung-Box检验，滞后10阶p值0.928，滞后20阶p值0.974——全部不显著。ARCH-LM检验在滞后5阶p值0.808——也不能拒绝无ARCH效应的原假设。
+
+结论很清楚：从条件异方差的捕捉来看，GARCH(1,1)已经做得很好了——\(z_t^2\) 和ARCH-LM都是干净的。均值方程确实有改进空间，但那是次要问题。从课程所学来看，\(z_t^2\) 的Ljung-Box和ARCH-LM不显著，才是评估GARCH模型的核心标准。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{标准化残差（Standardized Residuals）} 定义为 \(z_t = \varepsilon_t / \sigma_t\)。如果模型设定正确，\(z_t\) 应该近似为i.i.d.序列（均值为0，方差为1，无序列相关）。如果模型捕捉了所有条件异方差，\(z_t^2\) 不应再有自相关。注意：标准化残差来自arch包的\texttt{fit.std\_resid}输出，不应手动用 \(r_t / \hat{\sigma}_t\) 计算（因为均值方程可能不是零）。
+
+\paragraph{残差诊断逻辑} 对 \(z_t\) 做Ljung-Box检验检测均值方程的模型误设；对 \(z_t^2\) 做Ljung-Box和ARCH-LM检验检测方差方程的模型误设。核心标准是 \(z_t^2\) 的自相关和ARCH效应是否被消除——如果消除了，说明方差方程设定是恰当的（Sun, 2026, Lecture 9 \& 10）。
+
+\paragraph{均值方程改进空间} \(z_t\) 仍存在自相关，提示可以在均值方程中加入AR或MA项（如AR(1)-GARCH或ARMA-GARCH）。但在本文中，因为关注焦点是波动率而非收益率预测，常数均值方程的主要结论仍然成立。
+
+\newpage
+\section*{Slide 14：稳健性1 — Student-t GARCH(1,1)}
+\addcontentsline{toc}{section}{Slide 14：稳健性1 — Student-t GARCH(1,1)}
+
+\subsection*{讲稿}
+因为前面描述性统计已经发现收益率有明显的厚尾特征，正态分布假设可能不合适。所以第一个稳健性检验就是把新息分布从正态换成Student-t。
+
+结果非常明确。估计的自由度约5.15——自由度越小尾部越厚，5.15这个值确认了收益率确实比正态分布厚尾很多。
+
+AIC从20314降到19902，降幅超过400。AIC越低越好，所以Student-t GARCH明显优于正态GARCH。再看\(\alpha + \beta\)，Student-t下是0.9946，跟主模型的0.9928几乎一致。这说明核心发现——波动聚集和高持久性——不依赖于正态分布假设。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{Student-t分布} 一种比正态分布尾部更厚的对称分布，由自由度参数 \(\nu\) 控制。\(\nu\) 越小，尾部越厚，极端值概率越大。当 \(\nu \to \infty\) 时，t分布趋近于正态分布。对金融收益率，通常估计出 \(\nu\) 在3到8之间。需要 \(\nu > 2\) 以保证方差存在。
+
+\paragraph{AIC（Akaike Information Criterion）} 模型选择准则：\(\text{AIC} = -2\log L + 2k\)，其中 \(\log L\) 是对数似然值，\(k\) 是参数个数。AIC越小越好。它权衡了拟合优度和模型复杂度，对额外参数施加惩罚。AIC差大于2通常被视为有\"实质性差异\"，大于10则是\"非常强\"的证据。
+
+\paragraph{BIC（Bayesian Information Criterion）} 类似AIC，但惩罚项更大：\(\text{BIC} = -2\log L + k\log T\)，其中 \(T\) 是样本量。BIC倾向于选择更精简的模型。当AIC和BIC都指向同一个模型时，结论更加稳健。
+
+\newpage
+\section*{Slide 15：稳健性2 — GJR-GARCH(1,1)}
+\addcontentsline{toc}{section}{Slide 15：稳健性2 — GJR-GARCH(1,1)}
+
+\subsection*{讲稿}
+第二个稳健性是GJR-GARCH，它在方差方程里加入一个非对称项。核心思想是：同等幅度下，负向冲击会不会比正向冲击更大幅度地推高波动？这就是所谓的\"杠杆效应\"——坏消息比好消息更让市场紧张。
+
+先看正态分布假设下的结果。\(\gamma = 0.0159\)，符号为正——跟理论方向一致，说明负向冲击确实有更大的影响。但是p值是0.217，远大于0.05，因此在正态设定下不显著。不能强断言存在杠杆效应。
+
+但接下来是关键：我们之前已经发现正态分布假设不对，厚尾分布明显更好。所以很自然地要问：如果把GJR-GARCH的分布也换成Student-t会怎样？
+
+结果：\(\gamma\) 变成了0.0217，p值降到了0.046——在5\%水平显著！AIC也从20312降到了19899。
+
+这个对比非常说明问题：正态分布假设可能掩盖了非对称效应。当我们允许更厚的尾部后，负向冲击放大波动的效应在统计上变得显著了。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{GJR-GARCH模型} Glosten、Jagannathan和Runkle（1993）提出的非对称GARCH模型。方差方程为：
+\[
+\sigma_t^2 = \omega + \alpha \varepsilon_{t-1}^2 + \gamma I(\varepsilon_{t-1} < 0) \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2
+\]
+其中 \(I(\cdot)\) 是指示函数（括号内条件成立时取1，否则取0）。
+
+\paragraph{杠杆效应（Leverage Effect）} 金融中的一个实证规律：股票价格下跌（负收益率）往往伴随着未来波动率的上升，且这种效应在幅度上大于同等正收益率带来的波动率下降。一个解释是：股价下跌使得公司杠杆率（负债/权益）上升，公司风险变大，因此未来波动率上升。
+
+\paragraph{GJR的 \(\gamma\) 参数} 如果 \(\gamma > 0\) 且显著，说明负向冲击比正向冲击对条件方差有更大的正向影响。GJR的持久性代理指标为 \(\alpha + \beta + \gamma/2\)（考虑冲击均值为零时的平均持久性）。
+
+\paragraph{为什么分布假设影响显著性} 如果真实分布是厚尾的但模型假设正态，少数极端值会被模型视为\"极端异常\"，导致参数估计的标准误被放大，从而降低显著性检验的功效。改用Student-t分布后，极端值被\"接纳\"为分布的合理部分，标准误缩小，非对称效应的显著性得以显现。
+
+\newpage
+\section*{Slide 16：稳健性3 — EGARCH(1,1)}
+\addcontentsline{toc}{section}{Slide 16：稳健性3 — EGARCH(1,1)}
+
+\subsection*{讲稿}
+第三种稳健性检验是EGARCH模型。和GJR不同，EGARCH不是直接在方差方程里加项，而是对对数方差建模。
+
+方程形式：对数方差等于 \(\omega\) 加上三个部分——\(\alpha\) 乘以冲击的幅度，再加上 \(\gamma\) 乘以冲击的符号，再加上 \(\beta\) 乘以上一期对数方差。
+
+\(\alpha\) 度量冲击幅度效应，\(\gamma\) 度量符号效应。如果 \(\gamma < 0\)，说明负向冲击会提高对数方差。注意EGARCH的 \(\gamma\) 预期是负的才符合杠杆效应方向——这和GJR不同。
+
+来看结果。EGARCH-Normal：\(\gamma = -0.0121\)，p值0.213，不显著。EGARCH-Student-t：\(\gamma = -0.0123\)，p值0.101，接近10\%边界但没有达到5\%的常用显著性水平。
+
+两个EGARCH的非对称项都不显著。AIC方面，EGARCH略优于对应的GJR模型，但差距不大。
+
+综合GJR和EGARCH的结果：GJR-Student-t下非对称项显著，但EGARCH下不显著。这说明非对称效应的存在与否对模型形式——也就是对非对称的具体建模方式——是敏感的。我们不能简单地宣称\"杠杆效应存在\"或\"不存在\"，应该说：在某些设定下获得支持，在另一些设定下证据较弱。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{EGARCH模型（Exponential GARCH）} Nelson（1991）提出。对方差取对数，使得方差自动为正（不需要参数非负约束）。方差方程为：
+\[
+\ln\sigma_t^2 = \omega + \alpha(|z_{t-1}| - \mathbb{E}|z_{t-1}|) + \gamma z_{t-1} + \beta \ln\sigma_{t-1}^2
+\]
+其中 \(z_t = \varepsilon_t / \sigma_t\) 是标准化新息。\(\mathbb{E}|z_t| = \sqrt{2/\pi}\)（正态分布下）。
+
+\paragraph{EGARCH参数解释}
+\begin{itemize}[nosep]
+\item \(\alpha\)：幅度/对称效应。\(\alpha > 0\) 表示较大的 \(|\varepsilon_{t-1}|\)（无论正负）会提高对数方差。
+\item \(\gamma\)：符号/非对称效应。\(\gamma < 0\) 且显著表示负的 \(z_{t-1}\) 比正的 \(z_{t-1}\) 对对数方差有更强的正向影响——即杠杆效应方向。注意arch包中EGARCH的 \(\gamma\) 参数符号预期与GJR相反。
+\item \(\beta\)：对数方差持续性。因为模型在log空间，平稳条件只是 \(|\beta| < 1\)（而非 \(\alpha + \beta < 1\)）。
+\end{itemize}
+
+\paragraph{EGARCH vs GJR} 两者都是非对称波动模型，但建模方式不同。GJR直接对 \(\sigma_t^2\) 添加示性函数项，经济含义直观。EGARCH对 \(\ln\sigma_t^2\) 建模，自动保证方差为正，且允许非对称效应以更灵活的形式出现。但EGARCH的预测较复杂（因为需要从 \(\ln\sigma_t^2\) 转换回 \(\sigma_t^2\)）。
+
+\paragraph{对模型形式敏感} 指同一个经济假说（\"杠杆效应\"）在不同模型设定下得到不同结论。如果结论对模型形式敏感，说明证据不够稳健。本文中GJR-t显著但EGARCH-t不显著，正是这种情况。
+
+\newpage
+\section*{Slide 17：稳健性4 — AR(1)-GARCH(1,1)}
+\addcontentsline{toc}{section}{Slide 17：稳健性4 — AR(1)-GARCH(1,1)}
+
+\subsection*{讲稿}
+最后一个稳健性检验是AR(1)-GARCH。前面残差诊断发现标准化残差 \(z_t\) 还有自相关，说明简单常数均值可以改进。所以这里把均值方程从常数换成AR(1)，让收益率可以依赖昨天的收益率。
+
+结果：AR(1)系数约0.024，非常小。AIC从20314降到20309，只降了约5点——改进确实存在，但幅度有限。
+
+关键是 \(\alpha + \beta\) 仍然是0.9928，跟主模型完全一致。这说明均值方程的微小调整对波动率估计影响不大。主要结论保持稳健。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{AR(1)-GARCH模型} 均值方程为AR(1)形式的GARCH模型：
+\begin{align*}
+r_t &= \phi_0 + \phi_1 r_{t-1} + \varepsilon_t \quad \text{（AR(1)均值方程）}\\
+\sigma_t^2 &= \omega + \alpha \varepsilon_{t-1}^2 + \beta \sigma_{t-1}^2 \quad \text{（方差方程不变）}
+\end{align*}
+AR(1)系数 \(\phi_1\) 度量了今天收益率与昨天收益率之间的线性依赖关系。在有效市场假说下，\(\phi_1\) 应该为零或非常小。
+
+\paragraph{为什么均值方程改进不影响波动率结论} GARCH模型的均值方程和方差方程在估计时是联合估计的。但如果收益率中的自相关结构很弱（\(\phi_1 \approx 0\)），它对 \(\varepsilon_t\) 的影响很小，从而对方差方程参数的影响也很小。实证结果证实了这一点。
+
+\newpage
+\section*{Slide 18：核心发现}
+\addcontentsline{toc}{section}{Slide 18：核心发现}
+
+\subsection*{讲稿}
+总结一下五个核心发现。
+
+第一，波动聚集确实存在。ARCH-LM在所有滞后期都极其显著。
+
+第二，GARCH(1,1)能够刻画时变条件波动率。\(\alpha\) 和 \(\beta\) 都高度显著，模型捕捉了主要条件异方差。
+
+第三，波动高度持久。\(\alpha+\beta\) 接近1，半衰期约4.6个月。
+
+第四，厚尾特征被所有模型设置稳健地确认。无论是哪个模型，Student-t版本都远优于正态版本，AIC降幅全部超过400。
+
+第五也是最重要的一点：非对称效应有部分证据，但对模型形式敏感。GJR-Student-t下非对称项显著，但EGARCH-t下不显著。所以不能简单地断言杠杆效应存在或不存在。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{稳健确认} 指一个结论在多种模型设定、多种分布假设下都保持一致。例如\"厚尾分布优于正态\"在GARCH、GJR-GARCH、EGARCH中都成立——这就是稳健结论。相比之下，\"非对称效应\"只在GJR-t中显著，在EGARCH中不显著——这就是不稳健的结论。
+
+\paragraph{证据的层次} 从强到弱：(1) 稳健显著——在所有相关设定下都显著；(2) 部分显著——在某些设定下显著，某些不显著；(3) 不显著——在所有设定下都不显著；(4) 方向正确但不显著——符号与经济理论一致但p值未达阈值。本文的非对称结论属于第(2)类。
+
+\newpage
+\section*{Slide 19：局限与证据边界}
+\addcontentsline{toc}{section}{Slide 19：局限与证据边界}
+
+\subsection*{讲稿}
+在研究结论之外，必须坦诚地讨论局限。
+
+第一，GARCH是reduced-form模型。它描述的是条件方差\"如何\"随时间演化，而不是\"为什么\"产生。它不解释波动的结构原因。
+
+第二，不预测涨跌方向。这是贯穿全文的核心立场——条件波动率高不等于市场会跌。
+
+第三，中国股市在样本期内经历了多次制度变革——股权分置改革、融资融券、熔断机制等，但本模型没有显式处理这些结构突变。
+
+第四，模型只用了收益率自身的历史信息，没有纳入货币政策、流动性、国际市场联动等外部因素。
+
+第五，关于非对称效应：GJR-t下显著，但EGARCH证据较弱。所以不能简单做\"杠杆效应存在\"或\"不存在\"的二元判断——答案取决于模型设定。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{Reduced-form模型} 与结构模型（Structural Model）相对。Reduced-form模型描述变量之间的统计关系，不试图识别因果机制。GARCH属于reduced-form：它描述 \(\sigma_t^2\) 如何依赖过去的 \(\varepsilon_t^2\)，但不回答\"为什么市场波动会变\"。
+
+\paragraph{结构突变（Structural Break）} 时间序列的数据生成过程在某个时点发生了根本性变化。例如，2010年融资融券引入可能改变了市场的波动特征。如果存在结构突变但模型未处理，参数估计可能有偏。
+
+\paragraph{遗漏变量偏误} 如果影响波动率的重要因素（如货币政策、国际市场波动）未被纳入模型，模型的条件方差估计可能不完全。但单变量GARCH的\"简约\"本身也是它的优势——不需要为每个潜在因素建模，仅从收益率自身的历史规律出发。
+
+\newpage
+\section*{Slide 20：结论}
+\addcontentsline{toc}{section}{Slide 20：结论}
+
+\subsection*{讲稿}
+最后是结论。
+
+第一，沪深300日收益率存在显著的波动聚集。ARCH-LM检验提供了明确的统计证据。
+
+第二，GARCH(1,1)能够刻画时变条件波动率，波动冲击高度持久。
+
+第三，厚尾分布在所有模型设定中都稳健地优于正态分布。
+
+第四，非对称效应部分支持。GJR-Student-t下显著，但EGARCH证据较弱，说明结论对模型形式敏感。
+
+最后，也是最重要的：GARCH是风险状态建模工具，不是涨跌预测模型。条件波动率为风险监测提供统计参考，但不能替代政策判断和基本面分析。
+
+\subsection*{名词解释与数学定义}
+
+\paragraph{风险状态建模 vs 方向预测} 风险状态建模关注\"不确定性有多大\"，方向预测关注\"价格往哪个方向走\"。GARCH只做前者。这个区分对正确使用和解读GARCH模型至关重要。将条件波动率的上升等同于\"市场要跌\"是错误解读。
+
+\paragraph{统计参考 vs 决策依据} 模型输出的是统计量（条件波动率），不是决策指令。统计参考可以纳入风险管理流程，但不能替代对经济基本面、政策环境、市场情绪的综合判断。
+
+\newpage
+\section*{Slide 21：谢谢}
+\addcontentsline{toc}{section}{Slide 21：谢谢}
+
+\subsection*{讲稿}
+谢谢各位老师，欢迎提问。
+
+\subsection*{名词解释与数学定义}
+本页为结束页，无新术语。
+
+\end{document}
