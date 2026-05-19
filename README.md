@@ -120,7 +120,7 @@ xelatex beamer_presentation.tex   # 第二次以获得正确的目录
 
 ## 注意事项
 
-1. 所有数值来自实际代码运行结果，未手动编造
+1. 所有数值来自实际代码运行结果
 2. 若AkShare接口1（`index_zh_a_hist`）失败，脚本自动回退到接口2（`stock_zh_index_daily`）
 3. 两个接口都失败时会给出明确报错并提示手动提供CSV
 4. 标准化残差来自arch包的`fit.std_resid`，不做手动`ret/sigma`计算
