@@ -14,7 +14,7 @@ def compute_returns():
     clean_path = DATA_PROCESSED / "hs300_daily_clean.csv"
     if not clean_path.exists():
         print(f"[ERROR] 找不到清洗数据: {clean_path}")
-        print("请先运行: python src/00_download_data.py")
+        print("请先运行: python code/00_download_data.py")
         return
 
     df = pd.read_csv(clean_path, parse_dates=["date"])

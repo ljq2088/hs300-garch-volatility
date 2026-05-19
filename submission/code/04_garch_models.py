@@ -97,7 +97,7 @@ def fit_garch_normal(ret_vals):
     """主模型: 常数均值 + GARCH(1,1) + 正态创新"""
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, q=1,
                        dist="normal", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     return _extract_fit_info(fit, "GARCH(1,1)-Normal", model_type="garch")
 
 
@@ -105,7 +105,7 @@ def fit_garch_t(ret_vals):
     """稳健性模型1: Student-t GARCH(1,1)"""
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, q=1,
                        dist="t", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     r = _extract_fit_info(fit, "GARCH(1,1)-Student-t", model_type="garch")
     r["nu"] = fit.params.get("nu", np.nan)
     return r
@@ -115,7 +115,7 @@ def fit_gjr_garch(ret_vals):
     """稳健性模型2: GJR-GARCH(1,1)"""
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, o=1, q=1,
                        dist="normal", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     return _extract_fit_info(fit, "GJR-GARCH(1,1)-Normal", model_type="gjr")
 
 
@@ -123,7 +123,7 @@ def fit_ar1_garch(ret_vals):
     """稳健性模型3: AR(1) 均值 + GARCH(1,1) + 正态创新"""
     model = arch_model(ret_vals, mean="AR", lags=1, vol="GARCH", p=1, q=1,
                        dist="normal", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     r = _extract_fit_info(fit, "AR(1)-GARCH(1,1)-Normal", model_type="garch")
     r["ar1"] = fit.params.get("y[1]", np.nan)
     return r
@@ -133,7 +133,7 @@ def fit_gjr_garch_t(ret_vals):
     """进一步稳健性: GJR-GARCH(1,1) + Student-t 创新"""
     model = arch_model(ret_vals, mean="Constant", vol="GARCH", p=1, o=1, q=1,
                        dist="t", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     r = _extract_fit_info(fit, "GJR-GARCH(1,1)-Student-t", model_type="gjr")
     r["nu"] = fit.params.get("nu", np.nan)
     return r
@@ -143,7 +143,7 @@ def fit_egarch_normal(ret_vals):
     """进一步稳健性: EGARCH(1,1) + 正态创新"""
     model = arch_model(ret_vals, mean="Constant", vol="EGARCH", p=1, o=1, q=1,
                        dist="normal", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     return _extract_fit_info(fit, "EGARCH(1,1)-Normal", model_type="egarch")
 
 
@@ -151,7 +151,7 @@ def fit_egarch_t(ret_vals):
     """进一步稳健性: EGARCH(1,1) + Student-t 创新"""
     model = arch_model(ret_vals, mean="Constant", vol="EGARCH", p=1, o=1, q=1,
                        dist="t", rescale=False)
-    fit = model.fit(disp="off")
+    fit = model.fit(disp="off", cov_type="robust")
     r = _extract_fit_info(fit, "EGARCH(1,1)-Student-t", model_type="egarch")
     r["nu"] = fit.params.get("nu", np.nan)
     return r

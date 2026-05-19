@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -e
+cd "$(dirname "$0")/.."
 
-python src/00_download_data.py
-python src/01_prepare_returns.py
-python src/02_descriptive_analysis.py
-python src/03_tests.py
-python src/04_garch_models.py
-python src/05_diagnostics.py
-python src/06_generate_summary_outputs.py
+python code/00_download_data.py
+python code/01_prepare_returns.py
+python code/02_descriptive_analysis.py
+python code/03_tests.py
+python code/04_garch_models.py
+python code/05_diagnostics.py
+python code/06_generate_summary_outputs.py

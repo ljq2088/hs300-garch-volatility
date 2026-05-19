@@ -40,8 +40,9 @@ REQUIRED = {
         "tables/table6_extended_asymmetric_models.md",
     ],
     "paper": [
-        "paper/assignment_draft.md",
-        "paper/ai_usage_statement.md",
+        "assignment_final.tex",
+        "assignment_final.pdf",
+        "ai_usage_statement.md",
     ],
 }
 

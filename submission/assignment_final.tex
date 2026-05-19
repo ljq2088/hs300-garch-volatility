@@ -6,6 +6,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{geometry}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{indentfirst}
@@ -81,6 +82,24 @@ r_t = 100[\log(P_t)-\log(P_{t-1})]
 
 图1展示了沪深300指数收盘价的长期走势；图2展示了日对数收益率序列，直观显示出波动聚集特征——在2008年金融危机、2015年股市异常波动、2020年初疫情冲击等时段波动明显放大；图3的平方收益率图进一步强化了这一观察；图4的收益率直方图叠加正态参考曲线，清晰展示了实际分布的厚尾特征。
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/fig2_hs300_returns.png}
+\caption{沪深300日对数收益率序列}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/fig3_hs300_squared_returns.png}
+\caption{沪深300日平方收益率}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig4_return_histogram.png}
+\caption{沪深300日收益率直方图与正态参考曲线}
+\end{figure}
+
 \section{模型与方法}
 
 \subsection{条件异方差检验}
@@ -99,7 +118,7 @@ r_t = 100[\log(P_t)-\log(P_{t-1})]
 
 \subsection{GARCH(1,1)模型设定}
 
-本文的主模型为常数值均值方程下的GARCH(1,1)模型（Bollerslev, 1986）。完整的模型设定如下。
+本文的主模型为常数均值方程下的GARCH(1,1)模型（Bollerslev, 1986）。完整的模型设定如下。
 
 \textbf{均值方程：}
 \[
@@ -150,7 +169,7 @@ z_t \stackrel{i.i.d.}{\sim} t(\nu), \quad \nu > 2
 \[
 r_t = \phi_0 + \phi_1 r_{t-1} + \varepsilon_t
 \]
-方差方程保持GARCH(1,1)不变。该设定用于检验常数值均值假设是否对波动率估计产生实质性影响。
+方差方程保持GARCH(1,1)不变。该设定用于检验常数均值假设是否对波动率估计产生实质性影响。
 
 \section{实证结果}
 
@@ -212,6 +231,12 @@ AIC / BIC & \multicolumn{4}{c}{20313.98 / 20340.71} \\
 
 图5展示了GARCH(1,1)估计的条件波动率（\(\hat{\sigma}_t\)）。条件波动率图清晰刻画出多个高风险时段：2008年全球金融危机期间波动率急剧攀升；2015年中国股市异常波动时期出现第二轮高风险区间；2020年初新冠疫情冲击再度推升条件波动率。在相对平稳的年份（2012—2014年、2016—2017年），条件波动率处于较低水平。
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/fig5_garch_conditional_volatility.png}
+\caption{GARCH(1,1)估计的沪深300条件波动率}
+\end{figure}
+
 \subsection{残差诊断}
 
 对主模型GARCH(1,1)-正态的标准化残差\(z_t = \varepsilon_t / \sigma_t\)进行诊断检验（\(z_t\)来自arch包\texttt{fit.std\_resid}输出）。
@@ -265,7 +290,7 @@ EGARCH-Student-t & Student-t & 19876.36 & 19916.46 & $-0.0123$ & 0.101 & 0.9904 
 
 主要发现如下：
 
-第一，厚尾分布对非对称效应的识别至关重要。GJR-GARCH在正态假设下\(\gamma\)不显著（\(p=0.217\)），但替换为Student-t分布后，\(\gamma=0.0217\)达到5\%显著性水平（\(p=0.046\)）。在正态分布假设下，GJR-GARCH的非对称效应可能被厚尾所掩盖。
+第一，厚尾分布设定对非对称效应的估计和显著性判断具有重要影响。GJR-GARCH在正态假设下\(\gamma\)不显著（\(p=0.217\)），但替换为Student-t分布后，\(\gamma=0.0217\)达到5\%显著性水平（\(p=0.046\)）。在正态分布假设下，GJR-GARCH的非对称效应可能被厚尾所掩盖。
 
 第二，EGARCH框架下的非对称效应不稳定。EGARCH-Normal的\(\gamma=-0.0121\)（\(p=0.213\)），EGARCH-Student-t的\(\gamma=-0.0123\)（\(p=0.101\)），均未达到5\%显著性水平。EGARCH-t的\(p\)值（0.101）接近10\%边界但未达到常用显著性水平，仅提供弱迹象。EGARCH在AIC上优于对应的GJR-GARCH，但非对称参数的显著性弱于GJR-t。
 
@@ -294,7 +319,7 @@ EGARCH-Student-t & Student-t & 19876.36 & 19916.46 & $-0.0123$ & 0.101 & 0.9904 
 
 第一，沪深300日收益率存在显著的波动聚集。平方收益率的Ljung-Box统计量和ARCH-LM检验均强烈拒绝无ARCH效应的原假设。
 
-第二，GARCH(1,1)模型能够刻画沪深300收益率的时变条件波动率。新冲击效应（\(\alpha=0.0734\)，\(p<0.001\)）和波动持续性（\(\beta=0.9195\)，\(p<0.001\)）均高度显著。\(\alpha+\beta=0.9928\)，半衰期约96个交易日，波动冲击具有高度持久性。标准化残差诊断表明，模型成功捕捉了主要的条件异方差结构。
+第二，GARCH(1,1)模型能够刻画沪深300收益率的时变条件波动率。新冲击效应（\(\alpha=0.0734\)，\(p<0.001\)）和波动持续性（\(\beta=0.9195\)，\(p<0.001\)）均高度显著。\(\alpha+\beta=0.9928\)，半衰期约96个交易日，波动冲击具有高度持久性。标准化残差诊断表明，模型较好捕捉了主要的条件异方差结构。
 
 第三，稳健性分析提供了补充证据。Student-t分布在所有模型设定中均远优于正态分布（AIC降幅均超过400），估计自由度稳定在5.14—5.19之间，稳健支持收益率的厚尾特征。在正态假设下GJR-GARCH的非对称项不显著，但在Student-t设定下非对称效应达到5\%显著性水平（\(\gamma=0.0217\)，\(p=0.046\)）。EGARCH模型的非对称项均未达5\%显著（Student-t下\(p=0.101\)，接近10\%边界但未达到常用显著性水平），非对称结论对模型形式有一定敏感性。因此，本文最稳健的核心结论是波动聚集、厚尾分布和波动高度持久性，而非对称波动效应在厚尾GJR-GARCH框架下获得了统计支持，但尚未在所有非对称模型中一致显著。
 
@@ -350,7 +375,6 @@ open & 开盘价 & 指数点 \\
 high & 最高价 & 指数点 \\
 low & 最低价 & 指数点 \\
 volume & 成交量 & 手 \\
-amount & 成交额 & 元 \\
 ret & 日对数收益率 & \% \\
 \bottomrule
 \end{tabular}
@@ -358,17 +382,17 @@ ret & 日对数收益率 & \% \\
 
 \subsection*{B. 代码说明}
 
-所有分析和图表由Python脚本生成，代码位于\texttt{src/}目录下。运行方式：
+所有分析和图表由Python脚本生成，代码位于\texttt{code/}目录下。运行方式：
 
 \begin{verbatim}
 conda activate ts_garch
-bash run_all.sh
+bash code/run_all.sh
 \end{verbatim}
 
 主要依赖包：pandas, numpy, matplotlib, scipy, statsmodels, arch, akshare。
 
 \subsection*{C. AI辅助声明}
 
-见 \texttt{paper/ai\_usage\_statement.md}。
+见 \texttt{ai\_usage\_statement.md}。
 
 \end{document}

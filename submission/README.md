@@ -27,9 +27,17 @@ submission/
 │   ├── run_all.sh             # 一键运行脚本
 │   └── requirements.txt       # Python 依赖
 └── data/                      # 数据文件
-    ├── hs300_daily_clean.csv  # 清洗后的沪深300日行情数据
-    └── hs300_returns.csv      # 日对数收益率序列（2002-01-07 至 2026-05-11，5902 观测）
+    ├── raw/
+    │   └── hs300_daily_raw.csv           # 原始下载数据
+    └── processed/
+        ├── hs300_daily_clean.csv         # 标准化清理数据
+        └── hs300_returns.csv             # 日对数收益率（2002-01-07 至 2026-05-11，5902 观测）
 ```
+
+运行时还会生成以下目录（无需手动创建）：
+- `figures/` — 9 张 PNG 图表
+- `tables/` — CSV 和 Markdown 格式的 6 组参数与诊断表格
+- `data/processed/` 下的 `hs300_garch_conditional_volatility.csv` 和 `hs300_garch_standardized_residuals.csv`
 
 ## 复现说明
 
@@ -44,10 +52,12 @@ pip install -r code/requirements.txt
 ### 运行
 
 ```bash
-# 完整运行
 bash code/run_all.sh
+```
 
-# 或逐步运行
+或逐步运行：
+
+```bash
 python code/00_download_data.py
 python code/01_prepare_returns.py
 python code/02_descriptive_analysis.py
@@ -57,7 +67,7 @@ python code/05_diagnostics.py
 python code/06_generate_summary_outputs.py
 ```
 
-生成的图表和表格将分别保存在当前工作目录下的 `figures/` 和 `tables/` 目录中。
+生成的图表和表格保存在当前工作目录下的 `figures/` 和 `tables/` 目录。
 
 ### 论文 PDF 编译
 
