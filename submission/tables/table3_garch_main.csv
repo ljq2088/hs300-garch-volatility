@@ -1,0 +1,10 @@
+parameter,estimate,std_error,t_stat,p_value,description
+mu,0.024651329435261955,0.015943953310328718,1.546124035579838,0.12207461500873432,Mean equation constant
+omega,0.021579918979577888,0.00657632110364528,3.2814576173319843,0.0010327204351333271,Baseline variance
+alpha,0.07335593986573767,0.010313608655412101,7.112538619277927,1.1392764178787907e-12,News impact (ARCH effect)
+beta,0.919471395103796,0.010420233641863839,88.2390382697151,0.0,Volatility persistence (GARCH effect)
+alpha+beta,0.9928273349695337,,,,Volatility persistence index
+half-life (days),96.29033824196202,,,,Shock half-life
+Log-likelihood,-10152.990499400152,,,,Maximized log-likelihood
+AIC,20313.980998800303,,,,Akaike information criterion
+BIC,20340.713185022316,,,,Bayesian information criterion
