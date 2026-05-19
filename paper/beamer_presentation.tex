@@ -205,7 +205,6 @@
   \end{center}
   \begin{itemize}
     \item 模型识别出2008、2015、2020年高风险时段
-    \item 条件波动率反映\textbf{时变风险状态}，不是涨跌方向
   \end{itemize}
 \end{frame}
 
@@ -369,18 +368,14 @@
 \begin{frame}{局限与证据边界}
   \begin{itemize}
     \item \textbf{GARCH是reduced-form模型}\\
-    刻画条件方差的统计特征，不是结构因果模型
-    \item \textbf{不预测涨跌方向}\\
-    条件波动率高 $\neq$ 指数下跌，$\neq$ 指数上涨\\
-    仅模型推断的不确定性程度较高
+    刻画条件方差的统计特征
     \item \textbf{可能的结构突变}\\
     股权分置改革、融资融券、熔断机制等制度变革\\
     未被显式建模
     \item \textbf{遗漏变量}\\
     未纳入货币政策、流动性、国际市场等外部因素
     \item \textbf{非对称效应：GJR-t显著但EGARCH证据较弱}\\
-    非对称结论对模型形式（GJR vs EGARCH）敏感，\\
-    不能简单断言杠杆效应存在或不存在
+    非对称结论对模型形式（GJR vs EGARCH）敏感
   \end{itemize}
 \end{frame}
 
@@ -395,12 +390,6 @@
     \item \textbf{非对称效应部分支持}：GJR-Student-t下$\gamma$显著（$p=0.046$），\\
     但EGARCH证据较弱（$p=0.101$），结论对模型形式敏感
   \end{enumerate}
-  \vspace{1em}
-  \begin{center}
-    \textbf{GARCH是风险状态建模工具，不是涨跌预测模型。}\\
-    条件波动率为风险监测提供统计参考，\\
-    不能替代政策判断和基本面分析。
-  \end{center}
 \end{frame}
 
 % === Slide 20: 谢谢 ===
